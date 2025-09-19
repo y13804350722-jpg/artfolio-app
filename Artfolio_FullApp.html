@@ -1,0 +1,680 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Artfolio — Full Web App (Single HTML)</title>
+<meta name="description" content="Artfolio: dashboard, artworks, community, payments, blockchain network visualization, market, support, profile.">
+<style>
+  :root{
+    --bg:#0b0d12; --panel:#12151a; --panel2:#0e1117; --border:rgba(255,255,255,.08);
+    --text:#e8ebf2; --muted:#a3a9b4; --accent:#7aa2ff; --accent2:#34d399; --danger:#ef476f; --warn:#f7b267;
+    --r:16px;
+  }
+  *{box-sizing:border-box} html,body{height:100%}
+  body{margin:0;background:
+    radial-gradient(90rem 40rem at 80% -10%, rgba(122,162,255,.10), transparent),
+    radial-gradient(70rem 30rem at 10% 110%, rgba(52,211,153,.10), transparent),
+    var(--bg);
+    color:var(--text); font-family: ui-sans-serif, system-ui, -apple-system, Segoe UI, Inter, Roboto, Helvetica, Arial;
+  }
+  .container{max-width:1240px;margin:0 auto;padding:0 16px}
+  header{position:sticky;top:0;z-index:50;backdrop-filter:blur(10px) saturate(1.1);
+    background:linear-gradient(to bottom, rgba(0,0,0,.55), rgba(0,0,0,.35)); border-bottom:1px solid var(--border);}
+  .nav{display:flex;align-items:center;gap:12px;padding:14px 0}
+  .logo{width:36px;height:36px;border-radius:10px;background:conic-gradient(from 0deg,var(--accent),var(--accent2),var(--accent));
+    display:inline-grid;place-items:center;color:#fff;font-weight:800;letter-spacing:.2px;box-shadow:0 8px 28px rgba(122,162,255,.25)}
+  .brand{font-weight:700}
+  .tabs{display:flex;gap:8px;margin-left:16px;flex-wrap:wrap}
+  .tab{border:1px solid var(--border);border-radius:12px;padding:8px 12px;background:rgba(255,255,255,.04);color:var(--text);cursor:pointer}
+  .tab.active{background:rgba(122,162,255,.18);border-color:rgba(122,162,255,.35)}
+  .grow{flex:1}
+  .btn{border:1px solid var(--border);background:rgba(255,255,255,.06);color:var(--text);padding:9px 14px;border-radius:12px;cursor:pointer}
+  .btn.primary{background:var(--accent);border-color:transparent;color:#fff}
+  .btn.ghost{background:rgba(255,255,255,.04)}
+  .lang{border:1px solid var(--border);border-radius:10px;padding:8px 12px;background:rgba(255,255,255,.04);color:var(--text);cursor:pointer}
+  .avatar{width:36px;height:36px;border-radius:999px;background:linear-gradient(135deg,#00d2ff,#3a7bd5)}
+  main{padding:18px 0 80px}
+  .grid{display:grid;gap:16px}
+  .g-2{grid-template-columns: 1.1fr .9fr}
+  .g-3{grid-template-columns:repeat(3,1fr)}
+  @media(max-width:1000px){.g-2,.g-3{grid-template-columns:1fr}}
+  .card{background:var(--panel);border:1px solid var(--border);border-radius:var(--r);padding:16px}
+  .soft{background:var(--panel2)}
+  .title{font-weight:700}
+  .muted{color:var(--muted);font-size:12px}
+  .stat{border:1px solid var(--border);border-radius:12px;padding:12px;background:rgba(255,255,255,.04)}
+  .row{display:flex;align-items:flex-end;justify-content:space-between;gap:12px}
+  .list{display:grid;gap:12px}
+  .art{display:flex;gap:12px;border:1px solid var(--border);border-radius:12px;padding:10px;background:rgba(255,255,255,.03)}
+  .thumb{width:84px;height:84px;border-radius:12px;box-shadow:0 10px 28px rgba(0,0,0,.35)}
+  .hr{height:1px;background:var(--border);margin:10px 0}
+  .kpi{display:grid;grid-template-columns:repeat(4,1fr);gap:10px}
+  .pie{width:320px;height:320px;margin:auto}
+  input, select, textarea{background:#0b0d12;border:1px solid var(--border);color:#fff;padding:10px 12px;border-radius:12px;outline:none;width:100%}
+  table{width:100%;border-collapse:collapse;font-size:14px}
+  th,td{border-bottom:1px solid var(--border);padding:10px;text-align:left}
+  th{color:#cfd3db;font-weight:600}
+  .badge{font-size:11px;color:#cfd3db;border:1px solid var(--border);padding:2px 8px;border-radius:999px;background:rgba(255,255,255,.04)}
+  .modal{position:fixed;inset:0;display:none;align-items:center;justify-content:center;background:rgba(0,0,0,.6);backdrop-filter:blur(6px);z-index:80}
+  .modal.active{display:flex}
+  .dialog{width:min(900px,92vw);background:var(--panel2);border:1px solid var(--border);border-radius:16px;padding:16px}
+  .close{float:right;color:var(--muted);cursor:pointer}
+  /* Network Legend */
+  .legend{display:flex;gap:10px;flex-wrap:wrap}
+  .dot{width:10px;height:10px;border-radius:999px;display:inline-block;margin-right:6px}
+</style>
+</head>
+<body>
+  <header>
+    <div class="container nav">
+      <div class="logo">A</div><div class="brand">Artfolio</div>
+      <div class="tabs" id="tabs"></div>
+      <div class="grow"></div>
+      <button id="langBtn" class="lang">中文</button>
+      <div class="avatar"></div>
+      <button class="btn">Get Early Access</button>
+    </div>
+  </header>
+
+  <main class="container">
+    <div id="view"></div>
+  </main>
+
+  <!-- Modals -->
+  <div class="modal" id="detailModal"><div class="dialog"><div class="close" id="detailClose">✕</div><h3 class="title" id="detailTitle">Artwork</h3><div class="hr"></div><div id="detailBody"></div></div></div>
+  <div class="modal" id="walletModal"><div class="dialog"><div class="close" id="walletClose">✕</div><h3 class="title">Connect Wallet</h3><div class="hr"></div><div id="walletBody"></div></div></div>
+  <div class="modal" id="stripeModal"><div class="dialog"><div class="close" id="stripeClose">✕</div><h3 class="title">Card Payment</h3><div class="hr"></div><div id="stripeBody"></div></div></div>
+
+<script>
+// --------- i18n ---------
+const L = {
+  en: {
+    tabs:['Dashboard','Artwork','Community','Payment','Blockchain','Market','Support','Profile'],
+    cash:'Cash', holdings:'Holdings', positions:'Positions', oneY:'1Y Return',
+    recent:'Recent Activity', allocation:'Allocation', fractional:'Fractional', onchain:'On‑chain', autoDiv:'Auto Dividend',
+    valuation:'Valuation', priceSh:'Price/sh', available:'Available', totalShares:'Total Shares', invest:'Invest', details:'Details',
+    forum:'Investor Forum', comments:'comments', post:'Create Post', placeholder:'Write something...',
+    dao:'DAO Proposal', voteYes:'Vote Yes', voteNo:'Vote No',
+    amount:'Amount', pay:'Pay', stripe:'Pay with Card', crypto:'Pay with Crypto', history:'Payment History',
+    proofs:'Public Proofs', nft:'NFT Certificate', supply:'Token Supply', dividend:'Dividend', transfers:'Transfers', chainLog:'Event Log',
+    market:'Order Book', buy:'Buy', sell:'Sell', top:'Top Movers',
+    profile:'Your Profile', login:'Login', logout:'Logout', email:'Email', password:'Password', welcome:'Welcome',
+    pref:'Preferences', primary:'Primary color', secondary:'Secondary color',
+    support:'Support', education:'Education', expertise:'Connect with Expertise', consultants:'Connect with Consultants',
+    learn:'Learning Hub', lib:'Library', videos:'Videos', faq:'FAQ', book:'Book Session', send:'Send Request', topic:'Topic', msg:'Message',
+    net:'Network', simulateTx:'Simulate Transfer', simulateDiv:'Simulate Dividend', metrics:'On-chain Metrics', wallets:'Active Wallets', tx24:'Tx (24h)', gas:'Gas (gwei)', contracts:'Contracts'
+  },
+  zh: {
+    tabs:['仪表盘','作品','社区','支付','区块链','二级市场','支持','个人中心'],
+    cash:'现金', holdings:'份额', positions:'持仓', oneY:'一年回报',
+    recent:'最新动态', allocation:'资产分配', fractional:'碎片化', onchain:'链上', autoDiv:'自动分红',
+    valuation:'估值', priceSh:'每份价格', available:'可售', totalShares:'总份额', invest:'投资', details:'详情',
+    forum:'投资论坛', comments:'条评论', post:'发表帖子', placeholder:'写点什么……',
+    dao:'DAO 提案', voteYes:'赞成', voteNo:'反对',
+    amount:'金额', pay:'支付', stripe:'银行卡', crypto:'加密钱包', history:'支付记录',
+    proofs:'公开证明', nft:'NFT 凭证', supply:'代币供给', dividend:'分红', transfers:'转移', chainLog:'事件日志',
+    market:'挂单簿', buy:'买入', sell:'卖出', top:'热门榜',
+    profile:'个人中心', login:'登录', logout:'退出', email:'邮箱', password:'密码', welcome:'欢迎',
+    pref:'偏好设置', primary:'主色', secondary:'辅色',
+    support:'支持', education:'教育', expertise:'连接专家', consultants:'连接顾问',
+    learn:'学习中心', lib:'文库', videos:'视频', faq:'常见问题', book:'预约咨询', send:'提交需求', topic:'主题', msg:'留言',
+    net:'网络图', simulateTx:'模拟转账', simulateDiv:'模拟分红', metrics:'链上指标', wallets:'活跃钱包', tx24:'24小时交易', gas:'Gas (gwei)', contracts:'合约'
+  }
+};
+let lang='en';
+
+// --------- Data ---------
+const ARTWORKS=[
+  {id:'monet-01', title:'Water Lilies #01', artist:'Claude Monet', price:185, valuation:1850000, shares:10000, available:6200, img:'linear-gradient(135deg,#7dd3fc,#a78bfa)'},
+  {id:'vangogh-01', title:'The Starry Night', artist:'Vincent van Gogh', price:230, valuation:2300000, shares:10000, available:4800, img:'linear-gradient(135deg,#fca5a5,#fcd34d)'},
+  {id:'banksy-01', title:'Girl with Balloon', artist:'Banksy', price:210, valuation:2100000, shares:10000, available:9000, img:'linear-gradient(135deg,#34d399,#60a5fa)'},
+  {id:'picasso-01', title:'Guernica Fragment', artist:'Pablo Picasso', price:260, valuation:2600000, shares:10000, available:7000, img:'linear-gradient(135deg,#a78bfa,#f472b6)'},
+];
+let cash=8000;
+let holdings=[]; // {id,title,artist,qty,avg}
+let dao={yes:12,no:3};
+let chainEvents=[{t:Date.now()-86400000*2, note:'NFT certificates deployed', status:'✅', hash:'0xA1…F3c'}];
+let payments=[];
+let user=null;
+let posts=[{t:Date.now()-3600000*6, text:'Best modern artists to invest?', likes:16, comments:4},
+           {t:Date.now()-3600000*2, text:'AMA with appraiser today 5pm', likes:24, comments:12}];
+let advisors=[
+  {name:'Dr. Alice Chen', role:'Art Appraiser', tags:['Appraisal','Modern Art'], slots:['Fri 10:00','Fri 14:00']},
+  {name:'Marco Rivera', role:'Investment Analyst', tags:['Portfolio','Risk'], slots:['Thu 16:00','Sat 11:00']},
+  {name:'Sophie Liu', role:'Restoration Specialist', tags:['Conservation'], slots:['Wed 15:00','Sun 10:00']},
+];
+
+// --------- Helpers ---------
+const $=s=>document.querySelector(s);
+const el=(t,p={},ch=[])=>{const n=document.createElement(t);Object.assign(n,p);if(p.style)Object.assign(n.style,p.style);ch.forEach(c=>n.appendChild(typeof c==='string'?document.createTextNode(c):c));return n;};
+const fmt=new Intl.NumberFormat('en-US',{maximumFractionDigits:2});
+function row(left,right){const r=el('div',{className:'row'});r.appendChild(left);r.appendChild(right);return r;}
+function card(content, cls='card'){const c=el('div',{className:cls});c.appendChild(content);return c;}
+function stat(label,value,sub){const c=el('div',{className:'stat'});c.appendChild(el('div',{className:'muted'},[label]));c.appendChild(el('div',{className:'title',style:{fontSize:'22px'}},[value]));if(sub)c.appendChild(el('div',{className:'muted'},[sub]));return c;}
+function chip(t){return el('span',{className:'chip'},[t])}
+function badge(t){return el('span',{className:'badge'},[t])}
+function hr(){return el('div',{className:'hr'})}
+function btn(label, fn, variant){const b=el('button',{className:'btn '+(variant||'')},[label]);b.addEventListener('click',fn);return b;}
+function fmtTime(t){const d=new Date(t);return d.toLocaleString()}
+
+// Charts
+function lineChart(canvas, data){
+  const ctx=canvas.getContext('2d'), w=canvas.width, h=canvas.height;
+  ctx.clearRect(0,0,w,h);
+  ctx.strokeStyle='rgba(122,162,255,0.9)'; ctx.lineWidth=3;
+  const max=Math.max(...data), min=Math.min(...data), pad=10;
+  ctx.beginPath();
+  data.forEach((v,i)=>{
+    const x=pad + (w-2*pad)*i/(data.length-1);
+    const y=h-pad - (h-2*pad)*(v-min)/(max-min||1);
+    i?ctx.lineTo(x,y):ctx.moveTo(x,y);
+  });
+  ctx.stroke();
+  const grad=ctx.createLinearGradient(0,0,0,h);
+  grad.addColorStop(0,'rgba(122,162,255,.25)'); grad.addColorStop(1,'rgba(122,162,255,0)');
+  ctx.lineTo(w-pad,h-pad); ctx.lineTo(pad,h-pad); ctx.closePath(); ctx.fillStyle=grad; ctx.fill();
+}
+function pieChart(canvas, slices){
+  const ctx=canvas.getContext('2d'), w=canvas.width, h=canvas.height, r=Math.min(w,h)/2-6;
+  const cx=w/2, cy=h/2;
+  const total=slices.reduce((s,x)=>s+x.value,0)||1;
+  let ang=-Math.PI/2;
+  slices.forEach(s=>{
+    const a=2*Math.PI*s.value/total;
+    ctx.beginPath(); ctx.moveTo(cx,cy);
+    ctx.fillStyle=s.color; ctx.arc(cx,cy,r,ang,ang+a); ctx.closePath(); ctx.fill();
+    ang+=a;
+  });
+}
+
+// --------- Blockchain Network Drawing ---------
+const NET = {
+  nodes:[
+    {id:'nft', label:'Artwork NFT', type:'nft', x:620, y:160},
+    {id:'contract', label:'Smart Contract', type:'contract', x:800, y:300},
+    {id:'treasury', label:'DAO Treasury', type:'treasury', x:620, y:420},
+    {id:'market', label:'Marketplace', type:'market', x:440, y:300},
+    {id:'w1', label:'Wallet A', type:'wallet', x:220, y:120},
+    {id:'w2', label:'Wallet B', type:'wallet', x:180, y:360},
+    {id:'w3', label:'Wallet C', type:'wallet', x:340, y:500},
+  ],
+  links:[
+    {from:'w1', to:'market', kind:'tx'},
+    {from:'market', to:'contract', kind:'tx'},
+    {from:'contract', to:'nft', kind:'mint'},
+    {from:'treasury', to:'w1', kind:'div'},
+    {from:'treasury', to:'w2', kind:'div'},
+    {from:'treasury', to:'w3', kind:'div'}
+  ]
+};
+
+function nodeColor(t){
+  if(t==='nft') return '#7aa2ff';
+  if(t==='contract') return '#a78bfa';
+  if(t==='treasury') return '#34d399';
+  if(t==='market') return '#fbbf24';
+  return '#60a5fa'; // wallet
+}
+function nodeGlow(t){
+  if(t==='nft') return 'rgba(122,162,255,.45)';
+  if(t==='contract') return 'rgba(167,139,250,.45)';
+  if(t==='treasury') return 'rgba(52,211,153,.45)';
+  if(t==='market') return 'rgba(251,191,36,.45)';
+  return 'rgba(96,165,250,.35)';
+}
+
+function drawNetwork(canvas, pulse){
+  const ctx=canvas.getContext('2d'); const w=canvas.width, h=canvas.height;
+  ctx.clearRect(0,0,w,h);
+  // grid glow
+  ctx.fillStyle='rgba(255,255,255,0.02)';
+  for(let x=0;x<w;x+=40){ctx.fillRect(x,0,1,h);}
+  for(let y=0;y<h;y+=40){ctx.fillRect(0,y,w,1);}
+
+  // links
+  NET.links.forEach((e,i)=>{
+    const a=NET.nodes.find(n=>n.id===e.from), b=NET.nodes.find(n=>n.id===e.to);
+    if(!a||!b) return;
+    const col = e.kind==='div' ? 'rgba(52,211,153,.8)' : (e.kind==='mint' ? 'rgba(167,139,250,.9)':'rgba(122,162,255,.8)');
+    ctx.strokeStyle=col; ctx.lineWidth=2; ctx.setLineDash([6,6]); ctx.beginPath();
+    ctx.moveTo(a.x,a.y); ctx.lineTo(b.x,b.y); ctx.stroke(); ctx.setLineDash([]);
+    // arrow
+    const ang=Math.atan2(b.y-a.y,b.x-a.x);
+    const ax=b.x-Math.cos(ang)*14, ay=b.y-Math.sin(ang)*14;
+    ctx.fillStyle=col;
+    ctx.beginPath(); ctx.moveTo(b.x,b.y); ctx.lineTo(ax+Math.cos(ang+Math.PI/2)*6, ay+Math.sin(ang+Math.PI/2)*6);
+    ctx.lineTo(ax+Math.cos(ang-Math.PI/2)*6, ay+Math.sin(ang-Math.PI/2)*6); ctx.closePath(); ctx.fill();
+
+    // pulse dot along edge
+    if(pulse){
+      const t=(Date.now()/700 + i*0.2)%1;
+      const px=a.x+(b.x-a.x)*t, py=a.y+(b.y-a.y)*t;
+      ctx.fillStyle=col; ctx.beginPath(); ctx.arc(px,py,4,0,Math.PI*2); ctx.fill();
+    }
+  });
+
+  // nodes
+  NET.nodes.forEach(n=>{
+    const r=22;
+    // glow
+    const g=ctx.createRadialGradient(n.x,n.y,2, n.x,n.y,40);
+    g.addColorStop(0,nodeGlow(n.type)); g.addColorStop(1,'rgba(0,0,0,0)');
+    ctx.fillStyle=g; ctx.beginPath(); ctx.arc(n.x,n.y,40,0,Math.PI*2); ctx.fill();
+
+    ctx.fillStyle=nodeColor(n.type);
+    ctx.beginPath(); ctx.arc(n.x,n.y,r,0,Math.PI*2); ctx.fill();
+    ctx.strokeStyle='rgba(255,255,255,.2)'; ctx.lineWidth=2; ctx.stroke();
+
+    ctx.fillStyle='#e8ebf2'; ctx.font='12px ui-sans-serif,system-ui';
+    ctx.textAlign='center'; ctx.fillText(n.label, n.x, n.y+r+14);
+  });
+}
+
+function addTempEdge(from,to,kind='tx'){
+  const e={from,to,kind,temp:true,ttl:2000,ts:Date.now()}; NET.links.push(e);
+  setTimeout(()=>{ const i=NET.links.indexOf(e); if(i>-1) NET.links.splice(i,1); }, e.ttl);
+}
+
+// --------- Views ---------
+const state={view:'dash'};
+
+function renderTabs(){
+  const t=$('#tabs'); t.innerHTML='';
+  L[lang].tabs.forEach((label,i)=>{
+    const id=['dash','art','comm','pay','chain','mkt','sup','me'][i];
+    const b=el('button',{className:'tab'+(state.view===id?' active':''),onclick:()=>{state.view=id; render()}},[label]);
+    t.appendChild(b);
+  });
+}
+
+function viewDashboard(){
+  const wrap=el('div',{className:'grid g-2'});
+  const left=card(el('div',{},[]));
+  left.appendChild(row(
+    el('div',{},[el('div',{className:'muted'},['Portfolio Value']),
+                 el('div',{className:'title',style:{fontSize:'30px'}},[`$${fmt.format(calcPortfolio())}`]),
+                 el('div',{className:'muted'},['Real‑time (mock)'])]),
+    el('div',{},[chip(L[lang].fractional),chip(L[lang].onchain),chip(L[lang].autoDiv)])
+  ));
+  const lc=el('canvas',{width:920,height:200,className:'soft',style:{borderRadius:'12px',marginTop:'12px'}});
+  left.appendChild(lc);
+  const series=[8000,8200,8350,8300,8520,8690,8850,8900,9100,9020,9240,9400];
+  lineChart(lc, series);
+  left.appendChild(el('div',{className:'kpi',style:{marginTop:'12px'}},[
+    stat(L[lang].holdings, `${holdings.reduce((s,h)=>s+h.qty,0)} sh`),
+    stat(L[lang].positions, `${holdings.length}`),
+    stat(L[lang].cash, `$${fmt.format(cash)}`),
+    stat(L[lang].oneY, '+18.2%', 'vs last year'),
+  ]));
+  left.appendChild(hr());
+  left.appendChild(el('div',{className:'title'},[L[lang].recent]));
+  const act=el('div',{className:'list'});
+  (window._log||[]).slice(-6).reverse().forEach(x=> act.appendChild(el('div',{className:'art'},[el('div',{},[x])])));
+  if(!(window._log&&window._log.length)) act.appendChild(el('div',{className:'muted'},['No activity yet.']));
+  left.appendChild(act);
+
+  const right=card(el('div',{},[]));
+  right.appendChild(el('div',{className:'title'},[L[lang].allocation]));
+  const pc=el('canvas',{width:360,height:360,className:'pie',style:{marginTop:'6px'}});
+  right.appendChild(pc);
+  const pv=calcPortfolio();
+  pieChart(pc,[{label:'Cash',value:cash,color:'rgba(122,162,255,.9)'},{label:'Art',value:Math.max(pv-cash,0),color:'rgba(52,211,153,.9)'}]);
+  right.appendChild(hr());
+  right.appendChild(el('div',{className:'title'},['Positions']));
+  if(holdings.length===0){
+    right.appendChild(el('div',{className:'muted'},['No positions. Buy shares in Artwork tab.']));
+  }else{
+    holdings.forEach(h=>{
+      const a=ARTWORKS.find(x=>x.id===h.id);
+      right.appendChild(row(
+        el('div',{className:'art'},[el('div',{className:'thumb',style:{background:a?a.img:'#333'}},[]),
+                                    el('div',{},[el('div',{className:'title'},[h.title]),el('div',{className:'muted'},[h.artist])])]),
+        el('div',{},[btn('Sell 10',()=>redeem(h.id,10),'ghost')])
+      ));
+    });
+  }
+  wrap.appendChild(left); wrap.appendChild(right);
+  return wrap;
+}
+
+function viewArtwork(){
+  const wrap=el('div',{className:'grid g-3'});
+  ARTWORKS.forEach(a=>{
+    const c=card(el('div',{},[]));
+    const head=row(el('div',{},[el('div',{className:'title'},[a.title]),el('div',{className:'muted'},[a.artist])]), badge('NFT Verified'));
+    const th=el('div',{className:'thumb',style:{background:a.img,height:'160px',width:'100%',borderRadius:'12px'}});
+    const stats=el('div',{className:'kpi',style:{marginTop:'10px'}},[
+      stat(L[lang].valuation, `$${fmt.format(a.valuation)}`),
+      stat(L[lang].priceSh, `$${fmt.format(a.price)}`),
+      stat(L[lang].available, `${fmt.format(a.available)} sh`),
+      stat(L[lang].totalShares, `${fmt.format(a.shares)}`),
+    ]);
+    const qty=el('input',{type:'number',value:10,min:1});
+    const actions=row(qty, el('div',{},[btn(L[lang].invest,()=>invest(a,parseInt(qty.value||'0',10)),'primary'),
+                                        btn(L[lang].details,()=>openDetail(a),'ghost')]));
+    c.appendChild(head); c.appendChild(th); c.appendChild(stats); c.appendChild(actions);
+    wrap.appendChild(c);
+  });
+  return wrap;
+}
+
+function viewCommunity(){
+  const wrap=el('div',{className:'grid g-2'});
+  const forum=card(el('div',{},[]));
+  forum.appendChild(el('div',{className:'title'},[L[lang].forum]));
+  const editor=row(el('input',{placeholder:L[lang].placeholder}), btn(L[lang].post,()=>{
+    const txt=editor.firstChild.value.trim(); if(!txt) return;
+    posts.unshift({t:Date.now(), text:txt, likes:0, comments:0}); render();
+  },'primary'));
+  forum.appendChild(editor); forum.appendChild(hr());
+  posts.slice(0,6).forEach(p=>{
+    const item=el('div',{className:'art'},[el('div',{},[el('div',{className:'title'},[p.text]), el('div',{className:'muted'},[fmtTime(p.t)])])]);
+    const actions=el('div',{},[btn('👍 '+p.likes,()=>{p.likes++; render()}), btn('💬 '+p.comments,()=>{p.comments++; render()},'ghost')]);
+    forum.appendChild(row(item, actions));
+  });
+  const daoCard=card(el('div',{},[]));
+  daoCard.appendChild(el('div',{className:'title'},[L[lang].dao]));
+  const total=dao.yes+dao.no||1, pctYes=Math.round(dao.yes*100/total), pctNo=100-pctYes;
+  const bar=el('div',{style:{height:'14px',border:'1px solid var(--border)',borderRadius:'8px',overflow:'hidden',background:'rgba(255,255,255,.05)'}},[]);
+  const yes=el('div',{style:{height:'100%',width:pctYes+'%',background:'linear-gradient(90deg, var(--accent), var(--accent2))'}},[]);
+  bar.appendChild(yes);
+  daoCard.appendChild(bar);
+  daoCard.appendChild(row(el('div',{className:'muted'},[`Yes ${pctYes}% • No ${pctNo}%`]), el('div',{},[btn(L[lang].voteYes,()=>{dao.yes++; render()},'primary'), btn(L[lang].voteNo,()=>{dao.no++; render()},'ghost')])));
+  wrap.appendChild(forum); wrap.appendChild(daoCard);
+  return wrap;
+}
+
+function viewPayment(){
+  const wrap=el('div',{className:'grid g-2'});
+  const form=card(el('div',{},[]));
+  form.appendChild(el('div',{className:'title'},[L[lang].pay]));
+  const amount=el('input',{type:'number',placeholder:L[lang].amount,value:500});
+  const method=el('select',{},[el('option',{value:'card'},['Card']), el('option',{value:'crypto'},['Crypto'])]);
+  form.appendChild(el('div',{className:'grid g-3'},[amount, method, btn('Continue',()=>{
+    if(method.value==='card') openStripe(parseFloat(amount.value||'0'));
+    else openWallet(parseFloat(amount.value||'0'));
+  },'primary')]));
+  const hist=card(el('div',{},[]));
+  hist.appendChild(el('div',{className:'title'},[L[lang].history]));
+  const table=el('table'); table.innerHTML='<thead><tr><th>Time</th><th>Method</th><th>Amount</th><th>Status</th></tr></thead>';
+  const tb=el('tbody'); payments.slice(0,8).forEach(p=>{
+    const tr=el('tr'); tr.appendChild(el('td',{},[fmtTime(p.t)])); tr.appendChild(el('td',{},[p.m])); tr.appendChild(el('td',{},['$'+fmt.format(p.a)])); tr.appendChild(el('td',{},[p.ok?'✅':'❌'])); tb.appendChild(tr);
+  });
+  table.appendChild(tb); hist.appendChild(table);
+  wrap.appendChild(form); wrap.appendChild(hist); return wrap;
+}
+
+function viewChain(){
+  const wrap=el('div',{},[]);
+
+  // Network card
+  const netCard=card(el('div',{},[]));
+  netCard.appendChild(el('div',{className:'title'},[L[lang].net]));
+  const netCanvas=el('canvas',{width:980,height:420,className:'soft',style:{borderRadius:'12px',marginTop:'8px'}});
+  netCard.appendChild(netCanvas);
+
+  // Legend + actions
+  const legend=el('div',{className:'row',style:{marginTop:'8px'}},[
+    el('div',{className:'legend'},[
+      el('div',{},[el('span',{className:'dot',style:{background:'#7aa2ff'}},[]),'NFT']),
+      el('div',{},[el('span',{className:'dot',style:{background:'#a78bfa'}},[]),'Contract']),
+      el('div',{},[el('span',{className:'dot',style:{background:'#34d399'}},[]),'Treasury']),
+      el('div',{},[el('span',{className:'dot',style:{background:'#fbbf24'}},[]),'Marketplace']),
+      el('div',{},[el('span',{className:'dot',style:{background:'#60a5fa'}},[]),'Wallet'])
+    ]),
+    el('div',{},[
+      btn(L[lang].simulateTx,()=>{
+        addTempEdge('w1','w2','tx'); log('Simulated transfer: Wallet A → Wallet B');
+      },'ghost'),
+      btn(L[lang].simulateDiv,()=>{
+        ['w1','w2','w3'].forEach(w=> addTempEdge('treasury',w,'div'));
+        log('Dividend distribution from Treasury to holders');
+      },'primary')
+    ])
+  ]);
+  netCard.appendChild(legend);
+
+  // animate
+  let anim=true;
+  function tick(){ if(!anim) return; drawNetwork(netCanvas,true); requestAnimationFrame(tick); }
+  drawNetwork(netCanvas,false); requestAnimationFrame(tick);
+  wrap.appendChild(netCard);
+
+  // Metrics + logs
+  const bottom=el('div',{className:'grid g-2',style:{marginTop:'12px'}},[]);
+  const metrics=card(el('div',{},[]));
+  metrics.appendChild(el('div',{className:'title'},[L[lang].metrics]));
+  const kpis=el('div',{className:'kpi',style:{marginTop:'8px'}},[
+    stat(L[lang].tx24,'128'),
+    stat(L[lang].wallets,'42'),
+    stat(L[lang].contracts,'3'),
+    stat(L[lang].gas,'24–36')
+  ]);
+  metrics.appendChild(kpis);
+
+  const logCard=card(el('div',{},[]));
+  logCard.appendChild(el('div',{className:'title'},[L[lang].chainLog]));
+  const t=el('table'); t.innerHTML='<thead><tr><th>Time</th><th>Event</th><th>Tx</th><th>Status</th></tr></thead>';
+  const b=el('tbody'); chainEvents.slice(0,12).forEach(e=>{
+    const tr=el('tr'); tr.appendChild(el('td',{},[fmtTime(e.t)])); tr.appendChild(el('td',{},[e.note])); tr.appendChild(el('td',{},[e.hash])); tr.appendChild(el('td',{},[e.status])); b.appendChild(tr);
+  });
+  t.appendChild(b); logCard.appendChild(t);
+
+  bottom.appendChild(metrics); bottom.appendChild(logCard);
+  wrap.appendChild(bottom);
+
+  // cleanup on tab change
+  netCard.addEventListener('remove',()=>{ /* no-op in single page */ });
+  return wrap;
+}
+
+function viewMarket(){
+  const wrap=card(el('div',{},[]));
+  wrap.appendChild(el('div',{className:'title'},[L[lang].market]));
+  const book=el('table'); book.innerHTML='<thead><tr><th>Side</th><th>Artwork</th><th>Shares</th><th>Price/sh</th><th>Action</th></tr></thead>';
+  const tb=el('tbody');
+  const listings=[
+    {side:'BUY', id:'monet-01', sh:10, px:195},
+    {side:'SELL', id:'vangogh-01', sh:8, px:240},
+    {side:'BUY', id:'banksy-01', sh:12, px:205},
+  ];
+  listings.forEach(l=>{
+    const a=ARTWORKS.find(x=>x.id===l.id);
+    const tr=el('tr'); tr.appendChild(el('td',{},[l.side==='BUY'?badge('BUY'):badge('SELL')]));
+    tr.appendChild(el('td',{},[a.title])); tr.appendChild(el('td',{},[String(l.sh)])); tr.appendChild(el('td',{},['$'+l.px]));
+    const act=btn(l.side==='BUY'?L[lang].sell:L[lang].buy,()=>alert('Simulated trade'),'primary');
+    tr.appendChild(el('td',{},[act])); tb.appendChild(tr);
+  });
+  book.appendChild(tb); wrap.appendChild(book);
+  wrap.appendChild(hr()); wrap.appendChild(el('div',{className:'title'},[L[lang].top]));
+  const movers=el('div',{className:'list'});
+  ARTWORKS.forEach(a=> movers.appendChild(el('div',{className:'art'},[el('div',{className:'thumb',style:{background:a.img}},[]), el('div',{},[el('div',{className:'title'},[a.title]), el('div',{className:'muted'},[a.artist])]), el('div',{},['$'+fmt.format(a.price)])])));
+  wrap.appendChild(movers);
+  return wrap;
+}
+
+function bullet(txt){return el('div',{className:'art'},[el('div',{},[txt])]);}
+
+function viewSupport(){
+  const wrap=el('div',{className:'grid g-2'});
+
+  // Education
+  const edu=card(el('div',{},[]));
+  edu.appendChild(el('div',{className:'title'},[L[lang].education]));
+  const eduList=el('div',{className:'list'},[
+    bullet('Intro to fractional art investing'),
+    bullet('How NFT certificates work for provenance'),
+    bullet('Understanding valuation & price per share'),
+    bullet('Risks: liquidity, appraisal variance, custody'),
+  ]);
+  const eduLinks=el('div',{className:'list'},[
+    row(el('div',{},['📚 ',L[lang].lib]), btn('Open',()=>alert('Open library'),'ghost')),
+    row(el('div',{},['🎬 ',L[lang].videos]), btn('Watch',()=>alert('Open videos'),'ghost')),
+    row(el('div',{},['❓ ',L[lang].faq]), btn('View',()=>alert('Open FAQ'),'ghost')),
+  ]);
+  edu.appendChild(eduList); edu.appendChild(hr()); edu.appendChild(eduLinks);
+
+  // Connect with Expertise
+  const exp=card(el('div',{},[]));
+  exp.appendChild(el('div',{className:'title'},[L[lang].expertise]));
+  const topic=el('select',{},[
+    el('option',{value:'appraisal'},['Appraisal /鉴定']),
+    el('option',{value:'portfolio'},['Portfolio /组合']),
+    el('option',{value:'restoration'},['Restoration /修复']),
+  ]);
+  const slot=el('select',{},[el('option',{value:'soon'},['This Week']), el('option',{value:'next'},['Next Week'])]);
+  const note=el('textarea',{rows:3,placeholder:L[lang].msg});
+  exp.appendChild(el('div',{className:'grid g-3'},[topic, slot, btn(L[lang].book,()=>alert('Session requested'), 'primary')]));
+  exp.appendChild(el('div',{style:{marginTop:'8px'}},[note]));
+
+  // Connect with Consultants
+  const con=card(el('div',{},[]));
+  con.appendChild(el('div',{className:'title'},[L[lang].consultants]));
+  const list=el('div',{className:'list'});
+  advisors.forEach(a=>{
+    const tags=a.tags.map(t=>chip(t));
+    const rowEl=row(
+      el('div',{className:'art'},[el('div',{className:'thumb',style:{background:'linear-gradient(135deg,#7aa2ff,#34d399)'}},[]),
+        el('div',{},[el('div',{className:'title'},[a.name]), el('div',{className:'muted'},[a.role]), el('div',{},tags)])]),
+      el('div',{},[btn(L[lang].send,()=>alert('Request sent to '+a.name),'primary')])
+    );
+    list.appendChild(rowEl);
+  });
+  con.appendChild(list);
+
+  wrap.appendChild(edu); wrap.appendChild(exp);
+  wrap.appendChild(con);
+  return wrap;
+}
+
+function viewProfile(){
+  const wrap=el('div',{className:'grid g-2'});
+  const account=card(el('div',{},[]));
+  account.appendChild(el('div',{className:'title'},[L[lang].profile]));
+  if(user){
+    account.appendChild(el('div',{className:'muted'},[L[lang].welcome+': '+user.email]));
+    account.appendChild(hr());
+    account.appendChild(btn(L[lang].logout,()=>{user=null; render()},'ghost'));
+  }else{
+    const email=el('input',{placeholder:L[lang].email});
+    const pwd=el('input',{type:'password',placeholder:L[lang].password});
+    account.appendChild(el('div',{className:'grid g-3'},[email,pwd, btn(L[lang].login,()=>{ if(!email.value||!pwd.value) return alert('Enter email & password'); user={email:email.value}; render(); }, 'primary')]));
+  }
+  const prefs=card(el('div',{},[]));
+  prefs.appendChild(el('div',{className:'title'},[L[lang].pref]));
+  const p1=el('input',{type:'color',value:'#7aa2ff'});
+  const p2=el('input',{type:'color',value:'#34d399'});
+  p1.oninput=e=>document.documentElement.style.setProperty('--accent', e.target.value);
+  p2.oninput=e=>document.documentElement.style.setProperty('--accent2', e.target.value);
+  prefs.appendChild(el('div',{className:'grid g-3'},[
+    el('div',{},[el('div',{className:'muted'},[L[lang].primary]), p1]),
+    el('div',{},[el('div',{className:'muted'},[L[lang].secondary]), p2])
+  ]));
+  wrap.appendChild(account); wrap.appendChild(prefs); return wrap;
+}
+
+// --------- Modals / Actions ---------
+function openDetail(a){
+  document.getElementById('detailTitle').textContent=a.title+' — '+a.artist;
+  const b=document.getElementById('detailBody'); b.innerHTML='';
+  const top=el('div',{className:'grid g-2'},[]);
+  const left=el('div',{},[]);
+  left.appendChild(el('div',{className:'thumb',style:{background:a.img,height:'280px',borderRadius:'12px'}}));
+  left.appendChild(el('div',{className:'muted',style:{marginTop:'8px'}},['Provenance • Appraisal • Condition report']));
+  const right=el('div',{},[]);
+  right.appendChild(el('div',{className:'kpi'},[
+    stat(L[lang].valuation, `$${fmt.format(a.valuation)}`),
+    stat(L[lang].priceSh, `$${fmt.format(a.price)}`),
+    stat(L[lang].available, `${fmt.format(a.available)} sh`),
+    stat(L[lang].totalShares, `${fmt.format(a.shares)}`),
+  ]));
+  const qty=el('input',{type:'number',value:25,min:1});
+  right.appendChild(el('div',{style:{marginTop:'10px'}},[btn('Buy 25 sh',()=>{invest(a,parseInt(qty.value||'25',10)); closeDetail();},'primary')]));
+  top.appendChild(left); top.appendChild(right); b.appendChild(top);
+  b.appendChild(hr());
+  b.appendChild(el('div',{className:'title'},['Estimated Price History']));
+  const lc=el('canvas',{width:760,height:200,className:'soft',style:{borderRadius:'12px',marginTop:'8px'}});
+  b.appendChild(lc);
+  const noise=Array.from({length:20},(_,i)=> 160 + i*4 + (Math.sin(i/2)*8) + (Math.random()*12-6));
+  lineChart(lc, noise);
+  b.appendChild(hr());
+  b.appendChild(el('div',{className:'title'},['Community Notes']));
+  const notes=el('div',{className:'list'},[
+    el('div',{className:'art'},[el('div',{},['“Great liquidity last quarter; fair price.” — @curator42'])]),
+    el('div',{className:'art'},[el('div',{},['“Authenticity verified by XX foundation.” — @auditor'])]),
+  ]);
+  b.appendChild(notes);
+  document.getElementById('detailModal').classList.add('active');
+}
+function closeDetail(){ document.getElementById('detailModal').classList.remove('active') }
+
+function openWallet(amount){
+  const b=document.getElementById('walletBody'); b.innerHTML='';
+  b.appendChild(el('div',{className:'muted'},['Simulated wallet connect']));
+  b.appendChild(el('div',{className:'grid g-3',style:{marginTop:'8px'}},[btn('MetaMask',()=>confirmPay('Crypto',amount), 'primary'), btn('Phantom',()=>confirmPay('Crypto',amount),'ghost'), btn('WalletConnect',()=>confirmPay('Crypto',amount),'ghost')]));
+  document.getElementById('walletModal').classList.add('active');
+}
+function openStripe(amount){
+  const b=document.getElementById('stripeBody'); b.innerHTML='';
+  const card=el('input',{placeholder:'4242 4242 4242 4242'});
+  const exp=el('input',{placeholder:'12/28'});
+  const cvc=el('input',{placeholder:'123'});
+  const doPay=btn('Pay $'+fmt.format(amount),()=>confirmPay('Card',amount),'primary');
+  b.appendChild(el('div',{className:'grid g-3'},[card,exp,cvc])); b.appendChild(el('div',{style:{marginTop:'8px'}},[doPay]));
+  document.getElementById('stripeModal').classList.add('active');
+}
+function closeWallet(){ document.getElementById('walletModal').classList.remove('active') }
+function closeStripe(){ document.getElementById('stripeModal').classList.remove('active') }
+function confirmPay(method, amount){
+  payments.unshift({t:Date.now(), m:method, a:amount, ok:true});
+  closeWallet(); closeStripe();
+  log(`Payment ${method} $${fmt.format(amount)} succeeded`);
+  render();
+}
+
+function invest(a, qty){
+  qty=parseInt(qty||'0',10); if(!Number.isFinite(qty)||qty<=0) return alert('Enter a valid amount');
+  const cost=qty*a.price; if(cost>cash) return alert('Not enough cash'); if(qty>a.available) return alert('Not enough available shares');
+  cash-=cost; a.available-=qty;
+  const i=holdings.findIndex(h=>h.id===a.id);
+  if(i>=0){ const h=holdings[i]; const total=h.qty+qty; const avg=(h.avg*h.qty+cost)/total; holdings[i]={...h, qty:total, avg}; }
+  else holdings.push({id:a.id,title:a.title,artist:a.artist,qty,avg:a.price});
+  log(`Invested ${qty} sh of ${a.title} @ $${a.price}`); render();
+}
+function redeem(id, qty){
+  const i=holdings.findIndex(h=>h.id===id); if(i<0) return;
+  const h=holdings[i]; if(qty<=0||qty>h.qty) return;
+  const a=ARTWORKS.find(x=>x.id===id); const px=a?a.price:h.avg;
+  cash+=qty*px; if(a) a.available+=qty; if(qty===h.qty) holdings.splice(i,1); else holdings[i]={...h, qty:h.qty-qty};
+  log(`Sold ${qty} sh of ${h.title} @ $${px}`); render();
+}
+function calcPortfolio(){let v=cash; holdings.forEach(h=>{const a=ARTWORKS.find(x=>x.id===h.id); v+=(a?a.price:h.avg)*h.qty;}); return v;}
+function log(txt){ window._log=window._log||[]; window._log.push(new Date().toLocaleTimeString()+' · '+txt); }
+
+// --------- Render ---------
+function render(){
+  renderTabs();
+  const v=document.getElementById('view'); v.innerHTML='';
+  if(state.view==='dash') v.appendChild(viewDashboard());
+  if(state.view==='art') v.appendChild(viewArtwork());
+  if(state.view==='comm') v.appendChild(viewCommunity());
+  if(state.view==='pay') v.appendChild(viewPayment());
+  if(state.view==='chain') v.appendChild(viewChain());
+  if(state.view==='mkt') v.appendChild(viewMarket());
+  if(state.view==='sup') v.appendChild(viewSupport());
+  if(state.view==='me') v.appendChild(viewProfile());
+  document.getElementById('langBtn').innerText = (lang==='en'?'中文':'EN');
+}
+document.addEventListener('click', (e)=>{
+  if(e.target.id==='detailClose') closeDetail();
+  if(e.target.id==='walletClose') closeWallet();
+  if(e.target.id==='stripeClose') closeStripe();
+});
+document.getElementById('langBtn').addEventListener('click',()=>{ lang = (lang==='en')?'zh':'en'; render(); });
+
+// init
+render();
+</script>
+</body>
+</html>
