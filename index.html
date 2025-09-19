@@ -1,0 +1,64 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Artfolio — Full App</title>
+<style>
+  body{margin:0;font-family:Arial,Helvetica,sans-serif;background:#0c0d10;color:#eee}
+  header{background:#111;padding:10px;display:flex;align-items:center;justify-content:space-between;position:sticky;top:0}
+  .logo{font-weight:bold;font-size:20px;color:#7aa2ff}
+  nav{display:flex;gap:10px}
+  nav button{background:#222;color:#eee;border:none;padding:8px 12px;border-radius:6px;cursor:pointer}
+  nav button.active{background:#7aa2ff;color:#fff}
+  .lang-toggle{background:#444;color:#eee;border:none;padding:8px 12px;border-radius:6px;cursor:pointer}
+  main{padding:20px}
+  section{display:none}
+  section.active{display:block}
+</style>
+</head>
+<body>
+<header>
+  <div class="logo">A</div>
+  <nav>
+    <button data-view="dash" class="active">Dashboard</button>
+    <button data-view="art">Artwork</button>
+    <button data-view="comm">Community</button>
+    <button data-view="pay">Payment</button>
+    <button data-view="chain">Blockchain</button>
+    <button data-view="market">Market</button>
+    <button data-view="profile">Profile</button>
+  </nav>
+  <button class="lang-toggle" id="langBtn">中文</button>
+</header>
+<main>
+  <section id="dash" class="active"><h1 data-en="Dashboard" data-zh="仪表盘">Dashboard</h1><p>Portfolio overview here...</p></section>
+  <section id="art"><h1 data-en="Artwork" data-zh="艺术品">Artwork</h1><p>Artwork listings...</p></section>
+  <section id="comm"><h1 data-en="Community" data-zh="社区">Community</h1><p>Posts, DAO votes...</p></section>
+  <section id="pay"><h1 data-en="Payment" data-zh="支付">Payment</h1><p>Stripe / Crypto payment form...</p></section>
+  <section id="chain"><h1 data-en="Blockchain" data-zh="区块链">Blockchain</h1><p>On-chain proofs...</p></section>
+  <section id="market"><h1 data-en="Market" data-zh="市场">Market</h1><p>Secondary trading...</p></section>
+  <section id="profile"><h1 data-en="Profile" data-zh="个人资料">Profile</h1><p>User login / settings...</p></section>
+</main>
+<script>
+// Routing
+document.querySelectorAll('nav button').forEach(btn=>{
+  btn.addEventListener('click',()=>{
+    document.querySelectorAll('nav button').forEach(b=>b.classList.remove('active'));
+    document.querySelectorAll('main section').forEach(s=>s.classList.remove('active'));
+    btn.classList.add('active');
+    document.getElementById(btn.dataset.view).classList.add('active');
+  });
+});
+// Language toggle
+let lang='en';
+document.getElementById('langBtn').addEventListener('click',()=>{
+  lang= lang==='en'?'zh':'en';
+  document.getElementById('langBtn').innerText= lang==='en'?'中文':'EN';
+  document.querySelectorAll('[data-en]').forEach(el=>{
+    el.innerText= el.getAttribute('data-'+lang);
+  });
+});
+</script>
+</body>
+</html>
